@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: mart_expense_summary
+    description: "Weekly and monthly expense summaries"
+    columns:
+      - name: period_type
+        description: "Type of period (week, month, year)"
+      - name: period_start_date
+        description: "Start date of the period"
+      - name: period_end_date
+        description: "End date of the period"
+      - name: total_expenses
+        description: "Total expenses for the period"
+      - name: transaction_count
+        description: "Number of transactions"
+      - name: avg_transaction_amount
+        description: "Average transaction amount"

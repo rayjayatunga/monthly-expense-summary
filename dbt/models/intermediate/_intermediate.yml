@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: int_all_transactions__unioned
+    description: "All transactions from all sources unioned together"
+    columns:
+      - name: transaction_date
+        description: "Date of transaction"
+        tests:
+          - not_null
+      - name: description
+        description: "Transaction description"
+      - name: merchant_name
+        description: "Merchant or payee name"
+      - name: amount
+        description: "Transaction amount"
+      - name: account_type
+        description: "Type of account (credit_card, chequing)"
+      - name: source
+        description: "Source of transaction (amex, scotia_credit, scotia_chequing)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['amex', 'scotia_credit', 'scotia_chequing']

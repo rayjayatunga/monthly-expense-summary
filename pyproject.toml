@@ -1,0 +1,14 @@
+[project]
+name = "monthly-expense-summary"
+version = "0.1.0"
+description = "Personal expense tracking pipeline with dbt and BigQuery"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.2.0",
+    "openpyxl>=3.1.0",
+    "google-cloud-storage>=2.10.0",
+    "google-cloud-bigquery>=3.10.0",
+    "dbt-bigquery>=1.8.0",
+    "python-dotenv>=1.0.0",
+]

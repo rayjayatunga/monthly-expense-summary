@@ -1,0 +1,46 @@
+version: 2
+
+sources:
+  - name: raw
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: raw
+    description: "Raw transaction data loaded from statement files"
+    
+    tables:
+      - name: amex_transactions
+        description: "Raw Amex credit card transactions"
+        columns:
+          - name: Date
+            description: "Transaction date"
+          - name: Description
+            description: "Transaction description"
+          - name: Merchant
+            description: "Merchant name"
+          - name: Amount
+            description: "Transaction amount"
+          - name: source
+            description: "Source identifier (amex)"
+          - name: uploaded_at
+            description: "Timestamp when file was uploaded"
+          - name: file_name
+            description: "Original filename"
+            
+      - name: scotia_credit_transactions
+        description: "Raw Scotia credit card transactions"
+        columns:
+          - name: source
+            description: "Source identifier (scotia_credit)"
+          - name: uploaded_at
+            description: "Timestamp when file was uploaded"
+          - name: file_name
+            description: "Original filename"
+            
+      - name: scotia_chequing_transactions
+        description: "Raw Scotia chequing account transactions"
+        columns:
+          - name: source
+            description: "Source identifier (scotia_chequing)"
+          - name: uploaded_at
+            description: "Timestamp when file was uploaded"
+          - name: file_name
+            description: "Original filename"

@@ -1,0 +1,76 @@
+version: 2
+
+models:
+  - name: base_amex__transactions
+    description: "Standardized Amex transactions with consistent column names"
+    columns:
+      - name: transaction_date
+        description: "Date of transaction"
+        tests:
+          - not_null
+      - name: transaction_date_processed
+        description: "Date transaction was processed"
+      - name: description
+        description: "Transaction description"
+      - name: merchant_name
+        description: "Merchant name"
+      - name: amount
+        description: "Transaction amount (negative for charges)"
+        tests:
+          - not_null
+      - name: foreign_amount
+        description: "Amount in foreign currency"
+      - name: commission
+        description: "Foreign exchange commission"
+      - name: exchange_rate
+        description: "Exchange rate applied"
+      - name: is_foreign_transaction
+        description: "Boolean flag for foreign transactions"
+      - name: account_type
+        description: "Type of account (credit_card)"
+      - name: source
+        description: "Source identifier (amex)"
+      - name: uploaded_at
+        description: "Timestamp when file was uploaded"
+      - name: file_name
+        description: "Original filename"
+        
+  - name: base_scotia_credit__transactions
+    description: "Standardized Scotia credit card transactions with consistent column names"
+    columns:
+      - name: transaction_date
+        description: "Date of transaction"
+        tests:
+          - not_null
+      - name: description
+        description: "Transaction description"
+      - name: merchant_name
+        description: "Merchant name"
+      - name: amount
+        description: "Transaction amount"
+        tests:
+          - not_null
+      - name: account_type
+        description: "Type of account (credit_card)"
+      - name: source
+        description: "Source identifier (scotia_credit)"
+        
+  - name: base_scotia_chequing__transactions
+    description: "Standardized Scotia chequing transactions with consistent column names"
+    columns:
+      - name: transaction_date
+        description: "Date of transaction"
+        tests:
+          - not_null
+      - name: description
+        description: "Transaction description"
+      - name: merchant_name
+        description: "Merchant or payee name"
+      - name: amount
+        description: "Transaction amount"
+        tests:
+          - not_null
+      - name: account_type
+        description: "Type of account (chequing)"
+      - name: source
+        description: "Source identifier (scotia_chequing)"
