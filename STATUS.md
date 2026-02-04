@@ -75,8 +75,11 @@ monthly-expense-summary/
 ## 🔄 Next Steps (Phase 2-5)
 
 ### Immediate Next Steps:
-1. **GCP Setup** (15 min)
+1. **GCP Setup** (20 min)
    - Create GCP project
+   - **Enable billing** (credit card required, but stays within $0 free tier)
+   - Set up budget alerts ($5/month recommended)
+   - Enable required APIs (BigQuery, Cloud Storage)
    - Create service account
    - Download JSON key
    - Create GCS bucket
@@ -131,6 +134,23 @@ monthly-expense-summary/
 
 **Phase 2: GCP Setup** ⏳ **READY TO START**
 - Follow SETUP.md Section "Step 1: Google Cloud Setup"
+- ⚠️ **Note**: Billing setup required (credit card needed, but you won't be charged)
+
+## 💰 Cost Expectations
+
+**Monthly Cost: $0.00** (stays within free tier)
+
+| Service | Free Tier | Your Usage | Status |
+|---------|-----------|------------|--------|
+| BigQuery Storage | 10 GB | ~100 MB | ✅ Free |
+| BigQuery Queries | 1 TB/month | ~5 GB/month | ✅ Free |
+| Cloud Storage | 5 GB | ~500 MB | ✅ Free |
+
+**To stay free:**
+- ✅ Only use BigQuery and Cloud Storage (already configured)
+- ✅ Set budget alerts at $5/month
+- ✅ Don't enable Compute Engine or other services
+- ✅ Monitor usage monthly (see SETUP.md Troubleshooting)
 
 ## 💡 Quick Start Command
 

@@ -7,19 +7,61 @@ This guide will help you set up the monthly expense summary pipeline.
 - ✅ Homebrew installed
 - ✅ uv installed
 - ✅ Python 3.11+
-- ✅ Google Cloud Platform account (free tier)
-- ✅ BigQuery API enabled
-- ✅ Cloud Storage API enabled
+- ✅ Google Cloud Platform account
+- ✅ Credit card (required for GCP billing, but won't be charged within free tier)
 
 ## Step 1: Google Cloud Setup
 
+⚠️ **Important**: You must set up billing in GCP even though this project stays within the free tier limits. Your credit card is required but you won't be charged if you stay within the generous free tier quotas (which this project does by default).
+
 ### 1.1 Create GCP Project
 ```bash
-# Go to https://console.cloud.google.com
-# Create a new project or use an existing one
+# 1. Go to https://console.cloud.google.com
+# 2. Click "Select a project" > "New Project"
+# 3. Name: monthly-expense-summary (or your preferred name)
+# 4. Click "Create"
+# 5. Note your Project ID (you'll need this later)
 ```
 
-### 1.2 Create Service Account
+### 1.2 Enable Billing & Set Budget Alerts
+
+**Enable Billing:**
+```bash
+# 1. Go to https://console.cloud.google.com/billing
+# 2. Click "Create billing account" (or link existing one)
+# 3. Enter your credit card information
+# 4. Link the billing account to your project
+```
+
+**Set Up Budget Alerts (Highly Recommended):**
+```bash
+# 1. Go to Billing > Budgets & Alerts
+# 2. Click "Create Budget"
+# 3. Select your project
+# 4. Set budget amount: $5.00 per month
+# 5. Set alert thresholds: 50%, 90%, 100%
+# 6. Add your email address
+# 7. Click "Finish"
+```
+
+**Expected Costs:** $0.00/month (well within free tier)
+- BigQuery Free Tier: 10 GB storage, 1 TB queries/month
+- Cloud Storage Free Tier: 5 GB storage
+- Your Expected Usage: ~100 MB storage, ~5 GB queries/month
+
+### 1.3 Enable Required APIs
+```bash
+# In GCP Console, go to APIs & Services > Enable APIs and Services
+# Search for and enable:
+# 1. BigQuery API
+# 2. Cloud Storage API
+
+# Or use gcloud CLI:
+gcloud services enable bigquery.googleapis.com
+gcloud services enable storage.googleapis.com
+```
+
+### 1.4 Create Service Account
 ```bash
 # In GCP Console:
 # 1. Go to IAM & Admin > Service Accounts
@@ -32,7 +74,7 @@ This guide will help you set up the monthly expense summary pipeline.
 # 6. Save as ~/expense-pipeline-key.json
 ```
 
-### 1.3 Create GCS Bucket
+### 1.5 Create GCS Bucket
 ```bash
 # In GCP Console or use gcloud CLI:
 gsutil mb -l US gs://monthly-expense-statements
@@ -44,7 +86,7 @@ gsutil mkdir gs://monthly-expense-statements/raw/scotia_credit/
 gsutil mkdir gs://monthly-expense-statements/raw/scotia_chequing/
 ```
 
-### 1.4 Create BigQuery Datasets
+### 1.6 Create BigQuery Datasets
 ```bash
 bq mk --dataset --location=US monthly_expense_summary:raw
 bq mk --dataset --location=US monthly_expense_summary:base
@@ -218,6 +260,35 @@ LIMIT 10
 
 ## Troubleshooting
 
+### Billing & Cost Concerns
+```bash
+# Check current billing status
+# Go to: https://console.cloud.google.com/billing
+
+# Monitor BigQuery usage
+# Go to: BigQuery Console > More > Query history
+# Check "Bytes processed" column
+
+# Check Cloud Storage usage
+gsutil du -sh gs://monthly-expense-statements
+
+# View detailed costs (if any)
+# Go to: Billing > Reports
+# Set date range and filter by service
+```
+
+**Expected Usage (stays within free tier):**
+- BigQuery Storage: ~100 MB (Free: 10 GB)
+- BigQuery Queries: ~5 GB/month (Free: 1 TB)
+- Cloud Storage: ~500 MB (Free: 5 GB)
+- **Cost: $0.00/month**
+
+**If you see unexpected charges:**
+1. Check if you accidentally created Compute Engine instances
+2. Verify you're only using BigQuery and Cloud Storage
+3. Review budget alerts
+4. Delete any unused resources
+
 ### Python Import Errors
 ```bash
 # Ensure venv is activated
@@ -245,9 +316,29 @@ dbt debug --profiles-dir .
 ### BigQuery Errors
 ```bash
 # Verify datasets exist
-bq ls
+bq ls --project_id=your-project-id
 
 # Check service account has BigQuery Admin role
+# Go to: IAM & Admin > IAM
+# Find your service account and verify roles
+
+# Common error: "Billing has not been enabled"
+# Solution: Enable billing in Step 1.2 above
+```
+
+### Billing Not Enabled Error
+```bash
+# Error message: "BigQuery API has not been used in project X before or it is disabled"
+# 
+# Solutions:
+# 1. Verify billing is enabled:
+#    Go to: https://console.cloud.google.com/billing
+#    Ensure billing account is linked to your project
+#
+# 2. Enable BigQuery API:
+#    gcloud services enable bigquery.googleapis.com --project=your-project-id
+#
+# 3. Wait 1-2 minutes for propagation
 ```
 
 ## Next Steps

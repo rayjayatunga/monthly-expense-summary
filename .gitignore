@@ -46,6 +46,7 @@ dbt/logs/
 dbt/profiles.yml
 
 # Credentials
+credentials/
 *.json
 *.key
 .env
