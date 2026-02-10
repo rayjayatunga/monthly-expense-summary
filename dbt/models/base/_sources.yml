@@ -2,28 +2,46 @@ version: 2
 
 sources:
   - name: raw
-    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    database: expenses-486200
     schema: raw
     description: "Raw transaction data loaded from statement files"
     
     tables:
       - name: amex_transactions
-        description: "Raw Amex credit card transactions"
+        description: "Raw Amex credit card transactions (append-only; deduplication happens in the base model)"
         columns:
           - name: Date
-            description: "Transaction date"
+            description: "Transaction date string as it appears in the statement (e.g. '30 Jan. 2026')"
+          - name: Date_Processed
+            description: "Date the transaction was processed by Amex"
           - name: Description
-            description: "Transaction description"
-          - name: Merchant
-            description: "Merchant name"
+            description: "Transaction description / merchant string from Amex"
+          - name: Cardmember
+            description: "Name of the card member who made the transaction"
           - name: Amount
-            description: "Transaction amount"
+            description: "Transaction amount (float, $ symbol stripped by ingestion script)"
+          - name: Foreign_Spend_Amount
+            description: "Amount in the original foreign currency, if applicable"
+          - name: Commission
+            description: "Foreign exchange commission charged by Amex"
+          - name: Exchange_Rate
+            description: "Exchange rate applied to the foreign transaction"
+          - name: Merchant
+            description: "Merchant name extracted from the statement"
+          - name: Merchant_Address
+            description: "Merchant address as reported by Amex"
+          - name: Additional_Information
+            description: "Any supplementary information Amex attaches to the transaction"
+          - name: transaction_hash
+            description: "SHA-256 hex digest of (date | description | amount | cardmember). Used for deduplication when overlapping date ranges are re-downloaded."
           - name: source
-            description: "Source identifier (amex)"
+            description: "Source identifier — always 'amex' for this table"
           - name: uploaded_at
-            description: "Timestamp when file was uploaded"
+            description: "Timestamp when the file was uploaded / processed"
           - name: file_name
-            description: "Original filename"
+            description: "Original statement filename"
+          - name: processing_date
+            description: "Calendar date on which the ingestion script ran"
             
       - name: scotia_credit_transactions
         description: "Raw Scotia credit card transactions"

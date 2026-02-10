@@ -9,9 +9,10 @@ This script:
 5. Archives processed files
 """
 
+import hashlib
 import pandas as pd
 from pathlib import Path
-from typing import Dict, List
+from typing import Optional
 import os
 from datetime import datetime
 
@@ -26,26 +27,143 @@ BQ_RAW_DATASET = 'raw'
 LOCAL_TEMP_DIR = Path('/tmp/statements')
 
 
+def _normalize_col_names(df: pd.DataFrame) -> pd.DataFrame:
+    """Standardise column names to BigQuery-safe snake_case."""
+    df.columns = (
+        df.columns
+        .str.strip()
+        .str.replace(' ', '_', regex=False)
+        .str.replace('/', '_', regex=False)
+        .str.replace('#', 'Number', regex=False)
+        .str.replace('-', '_', regex=False)
+    )
+    return df
+
+
+def _find_header_row(file_path: str) -> int:
+    """
+    Locate the row index whose first non-null cell is 'Date'.
+
+    Amex XLS files include several metadata / summary rows above the
+    actual transaction table.  This function scans row-by-row (reading
+    everything as plain strings) until it finds the header row.
+    """
+    df_raw = pd.read_excel(file_path, header=None, dtype=str)
+    for idx, row in df_raw.iterrows():
+        first_val = row.dropna().iloc[0] if not row.dropna().empty else ''
+        if str(first_val).strip().lower() == 'date':
+            return int(idx)
+    return 0  # fallback: assume first row is the header
+
+
+def _clean_amount(value) -> Optional[float]:
+    """
+    Strip currency symbols / commas and return a float, or None.
+
+    Handles values like '$3,317.05', '-$28.16', '28.16 USD', '0', NaN.
+    """
+    if pd.isna(value):
+        return None
+    s = str(value).strip()
+    # Remove currency symbols, commas, and trailing alpha codes (e.g. ' USD')
+    s = s.replace('$', '').replace(',', '').split()[0]
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def _extract_currency(value) -> Optional[str]:
+    """
+    Extract a 3-letter ISO currency code from a raw amount string.
+
+    Examples: '28.16 USD' → 'USD', '28.16USD' → 'USD', '$28.16' → None.
+    """
+    import re
+    if pd.isna(value):
+        return None
+    match = re.search(r'[A-Z]{3}$', str(value).strip())
+    return match.group(0) if match else None
+
+
+def _compute_transaction_hash(date_str: str, description: str,
+                               amount_raw: str, cardmember: str) -> str:
+    """
+    Return a stable SHA-256 hex digest that uniquely identifies a transaction.
+
+    Fields are normalised before hashing so minor formatting differences
+    (e.g. '$67.84' vs '67.84') do not produce different hashes for the
+    same underlying transaction.
+    """
+    clean_amount = _clean_amount(amount_raw)
+    amount_norm = f'{clean_amount:.2f}' if clean_amount is not None else ''
+
+    payload = '|'.join([
+        str(date_str).strip(),
+        str(description).strip(),
+        amount_norm,
+        str(cardmember).strip().upper(),
+    ])
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
 def parse_amex_file(file_path: str) -> pd.DataFrame:
     """
-    Parse Amex statement file (XLSX or CSV format).
-    
-    Args:
-        file_path: Path to Amex statement file
-        
-    Returns:
-        Parsed DataFrame
+    Parse an Amex statement file (XLS, XLSX, or CSV).
+
+    Amex XLS/XLSX exports contain several metadata rows before the
+    transaction table header.  This function detects that header row
+    dynamically, normalises column names, cleans monetary amounts, and
+    appends a SHA-256 ``transaction_hash`` column for deduplication.
     """
     if file_path.endswith('.xlsx') or file_path.endswith('.xls'):
-        df = pd.read_excel(file_path)
+        header_row = _find_header_row(file_path)
+        df = pd.read_excel(file_path, header=header_row, dtype=str)
+        # Drop any completely empty rows that can appear after the data
+        df = df.dropna(how='all')
     else:
-        df = pd.read_csv(file_path)
-    
-    # Expected columns based on your sample:
-    # Date, Date Processed, Description, Card Member, Account #, Amount, 
-    # Foreign Spend Amount, Commission, Exchange Rate, Additional Information, 
-    # Merchant, Address, City / Province, Postal Code, Country, Reference
-    
+        df = pd.read_csv(file_path, dtype=str)
+
+    df = _normalize_col_names(df)
+
+    # ------------------------------------------------------------------ #
+    # Compute transaction_hash BEFORE cleaning, using raw string values.  #
+    # Date, Description, Amount and Cardmember make a stable composite    #
+    # key; Reference is used instead of Amount when available (CSV export)#
+    # ------------------------------------------------------------------ #
+    date_col       = 'Date'
+    desc_col       = 'Description'
+    amount_col     = 'Amount'
+    # Cardmember column name varies slightly between formats
+    cardmember_col = next(
+        (c for c in df.columns if c.lower().startswith('card')),
+        None
+    )
+
+    df['transaction_hash'] = [
+        _compute_transaction_hash(
+            date_str    = row.get(date_col, ''),
+            description = row.get(desc_col, ''),
+            amount_raw  = row.get(amount_col, ''),
+            cardmember  = row.get(cardmember_col, '') if cardmember_col else '',
+        )
+        for _, row in df.iterrows()
+    ]
+
+    # ------------------------------------------------------------------ #
+    # Extract currency codes BEFORE cleaning strips them away             #
+    # Foreign_Spend_Amount may look like '28.16 USD' or '28.16USD'       #
+    # ------------------------------------------------------------------ #
+    if 'Foreign_Spend_Amount' in df.columns:
+        df['Foreign_Currency'] = df['Foreign_Spend_Amount'].apply(_extract_currency)
+
+    # ------------------------------------------------------------------ #
+    # Clean monetary columns so BigQuery receives proper floats            #
+    # ------------------------------------------------------------------ #
+    for col in ('Amount', 'Foreign_Spend_Amount', 'Commission', 'Exchange_Rate'):
+        if col in df.columns:
+            df[col] = df[col].apply(_clean_amount)
+
     return df
 
 

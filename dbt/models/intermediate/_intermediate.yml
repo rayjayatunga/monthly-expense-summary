@@ -21,4 +21,4 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['amex', 'scotia_credit', 'scotia_chequing']
+              values: ['amex']  # Only Amex enabled for now, will add Scotia later

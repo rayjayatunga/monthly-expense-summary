@@ -20,6 +20,8 @@ models:
           - not_null
       - name: foreign_amount
         description: "Amount in foreign currency"
+      - name: foreign_currency
+        description: "Foreign currency code (e.g., USD, EUR, GBP)"
       - name: commission
         description: "Foreign exchange commission"
       - name: exchange_rate

@@ -4,32 +4,32 @@
     )
 }}
 
--- TODO: Update this model once we have actual Scotia credit card CSV format
--- This is a placeholder structure based on common bank CSV formats
+-- TODO: Update this model once we have the actual Scotia credit card CSV format.
+-- This is a placeholder structure based on common bank CSV formats.
 
-with source as (
-    select * from {{ source('raw', 'scotia_credit_transactions') }}
+WITH source AS (
+    SELECT * FROM {{ source('raw', 'scotia_credit_transactions') }}
 ),
 
-renamed as (
-    select
+renamed AS (
+    SELECT
         -- Transaction details
         -- TODO: Replace column names with actual Scotia CSV columns
-        cast(transaction_date as date) as transaction_date,
+        CAST(transaction_date AS DATE) AS transaction_date,
         description,
-        merchant as merchant_name,
-        cast(amount as numeric) as amount,
-        
+        merchant AS merchant_name,
+        CAST(amount AS NUMERIC) AS amount,
+
         -- Account classification
-        'credit_card' as account_type,
-        
-        -- Metadata
+        'credit_card' AS account_type,
+
+        -- Ingestion metadata
         source,
         uploaded_at,
         file_name,
         processing_date
-        
-    from source
+
+    FROM source
 )
 
-select * from renamed
+SELECT * FROM renamed

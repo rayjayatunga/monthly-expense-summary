@@ -81,22 +81,22 @@ Complete these steps in order. Check off each item as you complete it.
 - [ ] Click "Create Bucket"
 
 ### 4.2 Configure Bucket
-- [ ] Bucket name: `monthly-expense-statements` (must be globally unique)
+- [x] Bucket name: `monthly-expense-statements` (must be globally unique)
   - If taken, try: `monthly-expense-statements-yourname`
-  - Write actual name here: `_______________________________`
-- [ ] Location type: `Region`
-- [ ] Location: `us-central1` (or your preferred region)
-- [ ] Storage class: `Standard`
-- [ ] Access control: `Uniform`
-- [ ] Click "Create"
+  - Write actual name here: `monthly-expense-statements`
+- [x] Location type: `Region`
+- [x] Location: `northamerica-northeast1` (Montreal - closest to Toronto)
+- [x] Storage class: `Standard`
+- [x] Access control: `Uniform`
+- [x] Click "Create"
 
 ### 4.3 Create Folder Structure
-- [ ] Click on your bucket name
-- [ ] Click "Create Folder" > Name: `raw` > Click "Create"
-- [ ] Click into `raw` folder
-- [ ] Create folder: `amex`
-- [ ] Create folder: `scotia_credit`
-- [ ] Create folder: `scotia_chequing`
+- [x] Click on your bucket name
+- [x] Click "Create Folder" > Name: `raw` > Click "Create"
+- [x] Click into `raw` folder
+- [x] Create folder: `amex`
+- [x] Create folder: `scotia_credit`
+- [x] Create folder: `scotia_chequing`
 
 **Your structure should look like:**
 ```
@@ -114,34 +114,35 @@ monthly-expense-statements/
 ### Option A: Via Console (Easier)
 
 #### 5.1 Create 'raw' Dataset
-- [ ] Go to: https://console.cloud.google.com/bigquery
-- [ ] In the Explorer panel, click your project name
-- [ ] Click the three dots (⋮) next to your project
-- [ ] Click "Create dataset"
-- [ ] Dataset ID: `raw`
-- [ ] Location: `US (multiple regions in US)`
-- [ ] Click "Create Dataset"
+- [x] Go to: https://console.cloud.google.com/bigquery
+- [x] In the Explorer panel, click your project name
+- [x] Click the three dots (⋮) next to your project
+- [x] Click "Create dataset"
+- [x] Dataset ID: `raw`
+- [x] Location: `northamerica-northeast1` (Montreal - matches GCS bucket)
+- [x] Click "Create Dataset"
 
 #### 5.2 Create 'base' Dataset
-- [ ] Repeat above steps
-- [ ] Dataset ID: `base`
-- [ ] Click "Create Dataset"
+- [x] Repeat above steps
+- [x] Dataset ID: `base`
+- [x] Click "Create Dataset"
 
 #### 5.3 Create 'intermediate' Dataset
-- [ ] Repeat above steps
-- [ ] Dataset ID: `intermediate`
-- [ ] Click "Create Dataset"
+- [x] Repeat above steps
+- [x] Dataset ID: `intermediate`
+- [x] Click "Create Dataset"
 
 #### 5.4 Create 'mart' Dataset
-- [ ] Repeat above steps
-- [ ] Dataset ID: `mart`
-- [ ] Click "Create Dataset"
+- [x] Repeat above steps
+- [x] Dataset ID: `mart`
+- [x] Click "Create Dataset"
 
 **Verify:** You should see 4 datasets under your project in BigQuery Explorer:
-- ☐ raw
-- ☐ base
-- ☐ intermediate
-- ☐ mart
+- ☑ raw
+- ☑ base
+- ☑ intermediate
+- ☑ mart
+- (Note: You also have a 'scratch' dataset - that's fine!)
 
 ---
 
@@ -171,15 +172,16 @@ cd /Users/rayjayatunga/Documents/Experiments/monthly-expense-summary
 # Create .env file (not tracked by git)
 cat > .env << EOF
 # Replace with your actual values
-GCP_PROJECT_ID=your-project-id-here
+GCP_PROJECT_ID=expenses-486200
 GCS_BUCKET_NAME=monthly-expense-statements
-GOOGLE_APPLICATION_CREDENTIALS=/Users/rayjayatunga/expense-pipeline-key.json
+GOOGLE_APPLICATION_CREDENTIALS=/Users/rayjayatunga/Documents/Experiments/monthly-expense-summary/credentials/expenses-486200-aac89b8bb809.json
 EOF
 ```
 
-- [ ] Run the above command
-- [ ] Edit `.env` and replace `your-project-id-here` with your actual Project ID
-- [ ] Verify: `cat .env`
+- [x] Run the above command
+- [x] Edit `.env` and replace with actual Project ID: `expenses-486200`
+- [x] Updated path to credentials in `credentials/` folder
+- [x] Verify: `cat .env`
 
 ### 7.2 Configure dbt Profile
 ```bash
@@ -188,8 +190,8 @@ mkdir -p ~/.dbt
 cp dbt/profiles.yml.example ~/.dbt/profiles.yml
 ```
 
-- [ ] Run the above command
-- [ ] Verify: `ls -la ~/.dbt/profiles.yml`
+- [x] Run the above command
+- [x] Verify: `ls -la ~/.dbt/profiles.yml`
 
 ---
 
@@ -205,23 +207,18 @@ python -c "from scripts.gcs_utils import GCSHandler; print('✅ GCS utils workin
 python -c "from scripts.bigquery_loader import BigQueryLoader; print('✅ BigQuery loader working')"
 ```
 
-- [ ] Run the above commands
-- [ ] Both should print success messages
+- [x] Run the above commands
+- [x] Both should print success messages
 
 ### 8.2 Test dbt Connection
 ```bash
 cd /Users/rayjayatunga/Documents/Experiments/monthly-expense-summary/dbt
 source ../.venv/bin/activate
-
-# Load environment variables
-export $(cat ../.env | xargs)
-
-# Test dbt connection
 dbt debug --profiles-dir ~/.dbt
 ```
 
-- [ ] Run the above commands
-- [ ] Should see: `All checks passed!`
+- [x] Run the above commands
+- [x] Should see: `All checks passed!`
 
 ---
 
@@ -229,16 +226,12 @@ dbt debug --profiles-dir ~/.dbt
 
 ### 9.1 Test with Existing Amex CSV
 ```bash
-# Set your project ID
-export GCP_PROJECT_ID=your-project-id-here
-
-# Upload your existing Amex CSV to GCS
-gsutil cp statements/raw/Amex/aug-2025.csv gs://monthly-expense-statements/raw/amex/
+# Upload was done via Python script
+# File uploaded: aug-2025.csv to gs://monthly-expense-statements/raw/amex/
 ```
 
-- [ ] Replace `your-project-id-here` with your actual project ID
-- [ ] Run the command
-- [ ] Verify in GCS Console: https://console.cloud.google.com/storage/browser
+- [x] File uploaded successfully
+- [x] Verify in GCS Console: https://console.cloud.google.com/storage/browser
 
 ---
 
@@ -253,19 +246,23 @@ export $(cat .env | xargs)
 python scripts/process_statements.py
 ```
 
-- [ ] Run the above
-- [ ] Check for success messages
-- [ ] Verify data in BigQuery Console
+- [x] Run the above
+- [x] Successfully processed 81 rows
+- [x] Data loaded to `raw.amex_transactions`
+- [x] File archived to `raw/amex/processed/`
 
 ### 10.2 Run dbt Models
 ```bash
 cd dbt
+source ../.venv/bin/activate
 dbt run --profiles-dir ~/.dbt
 ```
 
-- [ ] Run the above
-- [ ] Should see models built successfully
-- [ ] Check BigQuery Console for new tables in base/intermediate/mart datasets
+- [x] Run the above
+- [x] 3 models built successfully:
+  - ✅ `dev_base.base_amex__transactions` (view)
+  - ✅ `dev_intermediate.int_all_transactions__unioned` (view)
+  - ✅ `dev_mart.mart_expense_summary` (table)
 
 ### 10.3 Query Results
 ```sql
@@ -273,18 +270,22 @@ dbt run --profiles-dir ~/.dbt
 -- Run this query:
 
 SELECT * 
-FROM `your-project-id.mart.mart_expense_summary` 
+FROM `expenses-486200.dev_mart.mart_expense_summary` 
 ORDER BY period_start_date DESC 
 LIMIT 10
 ```
 
-- [ ] Replace `your-project-id` with your actual project ID
-- [ ] Run the query
-- [ ] You should see your expense summaries! 🎉
+- [x] Query successful!
+- [x] Expense summaries showing:
+  - Monthly: $5,883.55 total
+  - Weekly: $5,883.55 total  
+  - Yearly: $5,883.55 total
 
 ---
 
-## ✅ Setup Complete!
+## ✅ Setup Complete! 🎉
+
+**Congratulations!** Your expense tracking pipeline is fully operational!
 
 Once all checkboxes are checked, your pipeline is fully operational!
 
